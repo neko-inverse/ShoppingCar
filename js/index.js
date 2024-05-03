@@ -1,17 +1,43 @@
-/* ES6新语法，看不懂的用后面注释里的写法 */
+/* ES6新语法，使用属性修饰符，看不懂的用后面注释里的写法 */
 /* 单件商品的数据 */
 class UIGoods {
-  // 构造函数
   constructor(g) {
-    this.data = g
-    this.choose = 0
+    Object.defineProperty(this, 'data', {
+      get: function () {
+        return g
+      },
+      set: function (value) {
+        throw new Error('data 是只读属性，不能修改')
+      },
+      configurable: false, // 不能重新更改配置
+    })
+    let internalChooseValue = 0
+    Object.defineProperty(this, 'choose', {
+      get: function () {
+        return internalChooseValue
+      },
+      set: function (value) {
+        if (typeof value !== 'number') {
+          throw new Error('choose属性必须是数字')
+        }
+        var temp = parseInt(value)
+        if (temp !== value) {
+          throw new Error('choose属性必须是整数')
+        }
+        if (value < 0) {
+          throw new Error('choose属性必须大于等于 0')
+        }
+        internalChooseValue = value
+      },
+      configurable: false, // 不可以重新更改配置
+    })
   }
-  // 获取商品总价
-  getTotalPrice() {
-    return this.data.price * this.choose
+  // ES6 语法糖，getter 直接拿出来写，不用写 Object.defineProperty() 了
+  get TotalPrice() {
+    return this.choose * this.data.price
   }
   // 是否选中了此件商品
-  isChoose() {
+  get isChoose() {
     return this.choose > 0
   }
   // 选择的商品数量加 1
@@ -20,10 +46,38 @@ class UIGoods {
   }
   // 选择的商品数量减 1
   decrease() {
+    if (this.choose === 0) return
+    this.choose--
+  }
+}
+/* ES6新语法，看不懂的用后面注释里的写法 */
+/* 单件商品的数据 */
+/*
+class UIGoods {
+  构造函数
+  constructor(g) {
+    this.data = g
+    this.choose = 0
+  }
+  获取商品总价
+  getTotalPrice() {
+    return this.data.price * this.choose
+  }
+  是否选中了此件商品
+  isChoose() {
+    return this.choose > 0
+  }
+  选择的商品数量加 1
+  increase() {
+    this.choose++
+  }
+  选择的商品数量减 1
+  decrease() {
     if(this.choose === 0) return
     this.choose--
   }
 }
+*/
 /* 与上面写法效果一样，上面的是ES6的新语法
 构造函数，使用对象来调用方法
 function UIGoods(g) {
@@ -65,13 +119,13 @@ class UIData {
   getTotalPrice() {
     let sum = 0
     this.UiGoods.map(g => {
-      sum += g.getTotalPrice()
+      sum += g.TotalPrice
     })
     return sum
   }
   // 是否选中了某件商品
   isChoose(index) {
-    return this.UiGoods[index].isChoose()
+    return this.UiGoods[index].isChoose
   }
   // 增加某件商品的选中数量
   increase(index) {
@@ -99,7 +153,7 @@ class UIData {
   }
 }
 /* 整个界面 */
-class UI{
+class UI {
   constructor() {
     this.uiData = new UIData()
     this.doms = {
@@ -259,7 +313,7 @@ ui.doms.goodsContainer.addEventListener('click', function (e) {
   if (e.target.classList.contains('i-jiajianzujianjiahao')) {
     let index = e.target.dataset.index // H5的 data-index 属性
     ui.increase(index)
-  } else if (e.target.classList.contains('i-jianhao')){
+  } else if (e.target.classList.contains('i-jianhao')) {
     let index = e.target.dataset.index // H5的 data-index 属性
     ui.decrease(index)
   }
